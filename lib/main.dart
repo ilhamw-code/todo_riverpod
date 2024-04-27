@@ -120,6 +120,7 @@ class MyHomePage extends HookConsumerWidget {
             const SizedBox(
               height: 42,
             ),
+            const Toolbar()
           ],
         ),
       ),
@@ -173,9 +174,11 @@ class Toolbar extends HookConsumerWidget {
               onPressed: () =>
                   ref.read(todoListFilter.notifier).state = TodoListFilter.all,
               style: ButtonStyle(
-                  visualDensity: VisualDensity.compact,
-                  foregroundColor:
-                      WidgetStatePropertyAll(textColorFor(TodoListFilter.all))),
+                visualDensity: VisualDensity.compact,
+                // foregroundColor: WidgetStatePropertyAll(
+                //   textColorFor(TodoListFilter.all),
+                // ),
+              ),
             ),
           ),
           Tooltip(
@@ -186,9 +189,9 @@ class Toolbar extends HookConsumerWidget {
                   TodoListFilter.ative,
               style: ButtonStyle(
                 visualDensity: VisualDensity.compact,
-                foregroundColor: WidgetStatePropertyAll(
-                  textColorFor(TodoListFilter.ative),
-                ),
+                // foregroundColor: WidgetStatePropertyAll(
+                //   textColorFor(TodoListFilter.ative),
+                // ),
               ),
               child: const Text('Active'),
             ),
@@ -201,9 +204,9 @@ class Toolbar extends HookConsumerWidget {
                   TodoListFilter.completed,
               style: ButtonStyle(
                 visualDensity: VisualDensity.compact,
-                foregroundColor: WidgetStatePropertyAll(
-                  textColorFor(TodoListFilter.completed),
-                ),
+                // foregroundColor: WidgetStatePropertyAll(
+                //   textColorFor(TodoListFilter.completed),
+                // ),
               ),
               child: const Text('Completed'),
             ),

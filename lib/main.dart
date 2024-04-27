@@ -1,8 +1,60 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+
+import 'todo.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const ProviderScope(child: MyApp()));
 }
+
+/// buat a [TodoLlist] dan inisialisasi itu dengan default bawaan.
+///
+/// Kita menggunakan [StateNotifierProvider] disini dari `List<Todo>` karena kompleks
+/// objek, dengan logic bisnis yang advance seperti bagaimana mengedit Todo.
+
+final todoListProvider = NotifierProvider<TodoList, List<Todo>>(TodoList.new);
+
+/// cara lain untun menggunakan filter
+enum TodoListFilter {
+  all,
+  ative,
+  completed,
+}
+
+/// Untuk menggunakan filter
+/// kita menggunakan [StateProvider] kerna tidak ada logika yang rumitdi balik
+/// manipulasi  nilai karena ini hanya nilai enum
+final todoListFilter = StateProvider((_) => TodoListFilter.all);
+
+/// set angka belum completed todo
+///
+/// Dengan menggunakan [Provider], this value is cached, making it performant.\
+/// Even multiple widgets try to read the number of uncompleted todos,
+/// the value will be computed only once (until the todo-list changes).
+///
+/// This will also optimise unneeded rebuilds if the todo-list changes, but the
+/// number of uncompleted todos doesn't (such as when editing a todo).
+
+final uncompletedTodosCount = Provider<int>((ref) {
+  return ref.watch(todoListProvider).where((todo) => !todo.completed).length;
+});
+
+/// Mengelompokkan todo ke filter enum [todoListFilter].
+/// dan masih menggunakan [Provider]
+final filteredTodos = Provider<List<Todo>>((ref) {
+  final filter = ref.watch(todoListFilter);
+  final todos = ref.watch(todoListProvider);
+
+  switch (filter) {
+    case TodoListFilter.completed:
+      return todos.where((todo) => todo.completed).toList();
+    case TodoListFilter.ative:
+      return todos.where((todo) => !todo.completed).toList();
+    case TodoListFilter.all:
+      return todos;
+  }
+});
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

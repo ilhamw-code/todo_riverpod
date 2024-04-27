@@ -4,6 +4,11 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'todo.dart';
 
+/// Some keys used for testing
+final addTodoKey = UniqueKey();
+final activeFilterKey = UniqueKey();
+final completedFilterKey = UniqueKey();
+final allFilterKey = UniqueKey();
 void main() {
   runApp(const ProviderScope(child: MyApp()));
 }
@@ -55,8 +60,6 @@ final filteredTodos = Provider<List<Todo>>((ref) {
       return todos;
   }
 });
-///dhgfghfg
-///
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -65,7 +68,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Todo',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -85,95 +88,128 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
+class MyHomePage extends HookConsumerWidget {
+  const MyHomePage({super.key});
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final todos = ref.watch(filteredTodos);
+    final newTodoController = useTextEditingController();
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        body: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+          children: [
+            const Title(),
+            TextField(
+              key: addTodoKey,
+              controller: newTodoController,
+              decoration: const InputDecoration(
+                  labelText: 'Apa yang harus kamu Selesaikan?'),
+              onSubmitted: (value) {
+                ref.read(todoListProvider.notifier).add(value);
+                newTodoController.clear();
+              },
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+            const SizedBox(
+              height: 42,
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+}
+
+class Title extends StatelessWidget {
+  const Title({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Text(
+      'Todos',
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        color: Color.fromARGB(38, 47, 47, 247),
+        fontSize: 100,
+        fontWeight: FontWeight.w100,
+        fontFamily: 'Helvetica Neue',
+      ),
+    );
+  }
+}
+
+class Toolbar extends HookConsumerWidget {
+  const Toolbar({super.key});
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final filter = ref.watch(todoListFilter);
+
+    Color? textColorFor(TodoListFilter value) {
+      return filter == value ? Colors.blue : Colors.black;
+    }
+
+    return Material(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Text(
+              '${ref.watch(uncompletedTodosCount)} item left',
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Tooltip(
+            key: allFilterKey,
+            message: 'All Todo',
+            child: TextButton(
+              child: const Text('All'),
+              onPressed: () =>
+                  ref.read(todoListFilter.notifier).state = TodoListFilter.all,
+              style: ButtonStyle(
+                  visualDensity: VisualDensity.compact,
+                  foregroundColor:
+                      WidgetStatePropertyAll(textColorFor(TodoListFilter.all))),
+            ),
+          ),
+          Tooltip(
+            key: activeFilterKey,
+            message: 'Only uncompleted todos',
+            child: TextButton(
+              onPressed: () => ref.read(todoListFilter.notifier).state =
+                  TodoListFilter.ative,
+              style: ButtonStyle(
+                visualDensity: VisualDensity.compact,
+                foregroundColor: WidgetStatePropertyAll(
+                  textColorFor(TodoListFilter.ative),
+                ),
+              ),
+              child: const Text('Active'),
+            ),
+          ),
+          Tooltip(
+            key: completedFilterKey,
+            message: 'Only completed todos',
+            child: TextButton(
+              onPressed: () => ref.read(todoListFilter.notifier).state =
+                  TodoListFilter.completed,
+              style: ButtonStyle(
+                visualDensity: VisualDensity.compact,
+                foregroundColor: WidgetStatePropertyAll(
+                  textColorFor(TodoListFilter.completed),
+                ),
+              ),
+              child: const Text('Completed'),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

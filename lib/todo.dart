@@ -32,14 +32,14 @@ class TodoList extends Notifier<List<Todo>> {
   List<Todo> build() => [
         const Todo(description: 'Beli ayam', id: 'Todo-0'),
         const Todo(description: 'Beli penyet', id: 'Todo-1'),
-        const Todo(description: 'Beli lele', id: 'Todo-1'),
+        const Todo(description: 'Beli lele', id: 'Todo-2'),
       ];
 
   void add(String description) {
     state = [
       ...state,
       Todo(
-        description: 'Beli Nuget',
+        description: description,
         id: _uuid.v4(),
       )
     ];

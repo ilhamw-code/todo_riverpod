@@ -120,7 +120,25 @@ class MyHomePage extends HookConsumerWidget {
             const SizedBox(
               height: 42,
             ),
-            const Toolbar()
+            const Toolbar(),
+            if (todos.isNotEmpty) const Divider(height: 0),
+            for (var i = 0; i < todos.length; i++) ...[
+              if (i > 0)
+                const Divider(
+                  height: 0,
+                ),
+              Dismissible(
+                  key: ValueKey(todos[i].id),
+                  onDismissed: (_) {
+                    ref.read(todoListProvider.notifier).remove(todos[i]);
+                  },
+                  child: ProviderScope(
+                    overrides: [
+                      _currentTodo.overrideWithValue(todos[i]),
+                    ],
+                    child: const TodoItem(),
+                  ))
+            ]
           ],
         ),
       ),
@@ -175,9 +193,9 @@ class Toolbar extends HookConsumerWidget {
                   ref.read(todoListFilter.notifier).state = TodoListFilter.all,
               style: ButtonStyle(
                 visualDensity: VisualDensity.compact,
-                // foregroundColor: WidgetStatePropertyAll(
-                //   textColorFor(TodoListFilter.all),
-                // ),
+                foregroundColor: MaterialStatePropertyAll(
+                  textColorFor(TodoListFilter.all),
+                ),
               ),
             ),
           ),
@@ -189,9 +207,9 @@ class Toolbar extends HookConsumerWidget {
                   TodoListFilter.ative,
               style: ButtonStyle(
                 visualDensity: VisualDensity.compact,
-                // foregroundColor: WidgetStatePropertyAll(
-                //   textColorFor(TodoListFilter.ative),
-                // ),
+                foregroundColor: MaterialStatePropertyAll(
+                  textColorFor(TodoListFilter.ative),
+                ),
               ),
               child: const Text('Active'),
             ),
@@ -204,9 +222,9 @@ class Toolbar extends HookConsumerWidget {
                   TodoListFilter.completed,
               style: ButtonStyle(
                 visualDensity: VisualDensity.compact,
-                // foregroundColor: WidgetStatePropertyAll(
-                //   textColorFor(TodoListFilter.completed),
-                // ),
+                foregroundColor: MaterialStatePropertyAll(
+                  textColorFor(TodoListFilter.completed),
+                ),
               ),
               child: const Text('Completed'),
             ),
@@ -215,4 +233,74 @@ class Toolbar extends HookConsumerWidget {
       ),
     );
   }
+}
+
+/// make provider todoITem
+final _currentTodo = Provider<Todo>((ref) => throw UnimplementedError());
+
+/// display individual dari item TOdo
+class TodoItem extends HookConsumerWidget {
+  const TodoItem({super.key});
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final todo = ref.watch(_currentTodo);
+    final itemFocusNode = useFocusNode();
+    final itemIsFocussed = useIsFocused(itemFocusNode);
+
+    final textEditingController = useTextEditingController();
+    final textFieldFocusNode = useFocusNode();
+
+    return Material(
+      color: Colors.white,
+      elevation: 6,
+      child: Focus(
+        focusNode: itemFocusNode,
+        onFocusChange: (focused) {
+          if (focused) {
+            textEditingController.text = todo.description;
+          } else {
+            ref
+                .read(todoListProvider.notifier)
+                .edit(id: todo.id, descriptiion: textEditingController.text);
+          }
+        },
+        child: ListTile(
+          onTap: () {
+            itemFocusNode.requestFocus();
+            textFieldFocusNode.requestFocus();
+          },
+          leading: Checkbox(
+            value: todo.completed,
+            onChanged: (value) =>
+                ref.read(todoListProvider.notifier).toggle(todo.id),
+          ),
+          title: itemIsFocussed
+              ? TextField(
+                  autofocus: true,
+                  focusNode: textFieldFocusNode,
+                  controller: textEditingController,
+                )
+              : Text(todo.description),
+        ),
+      ),
+    );
+  }
+}
+
+bool useIsFocused(FocusNode node) {
+  final isFocused = useState((node.hasFocus));
+
+  useEffect(
+    () {
+      void listener() {
+        isFocused.value = node.hasFocus;
+      }
+
+      node.addListener(listener);
+      return () => node.removeListener(listener);
+    },
+    [node],
+  );
+
+  return isFocused.value;
 }

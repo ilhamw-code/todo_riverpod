@@ -59,12 +59,12 @@ class TodoList extends Notifier<List<Todo>> {
     ];
   }
 
-  void edit({required String id, required String descriptiion}) {
+  void edit({required String id, required String description}) {
     state = [
       for (final todo in state)
         if (todo.id == id)
           Todo(
-            description: todo.description,
+            description: description,
             id: todo.id,
             completed: todo.completed,
           )
@@ -72,6 +72,8 @@ class TodoList extends Notifier<List<Todo>> {
           todo
     ];
   }
+
+
 
   void remove(Todo target) {
     state = state.where((todo) => todo.id != target.id).toList();

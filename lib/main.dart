@@ -188,7 +188,6 @@ class Toolbar extends HookConsumerWidget {
             key: allFilterKey,
             message: 'All Todo',
             child: TextButton(
-              child: const Text('All'),
               onPressed: () =>
                   ref.read(todoListFilter.notifier).state = TodoListFilter.all,
               style: ButtonStyle(
@@ -197,6 +196,7 @@ class Toolbar extends HookConsumerWidget {
                   textColorFor(TodoListFilter.all),
                 ),
               ),
+              child: const Text('All'),
             ),
           ),
           Tooltip(
@@ -261,7 +261,7 @@ class TodoItem extends HookConsumerWidget {
           } else {
             ref
                 .read(todoListProvider.notifier)
-                .edit(id: todo.id, descriptiion: textEditingController.text);
+                .edit(id: todo.id, description: textEditingController.text);
           }
         },
         child: ListTile(
